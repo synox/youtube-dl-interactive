@@ -1,0 +1,46 @@
+{
+  "name": "youtube-dl-interactive",
+  "version": "0.0.1",
+  "description": "Interactively select the quality and format for youtube-dl",
+  "main": "./cli.js",
+  "scripts": {
+    "test": ""
+  },
+  "bin": "./cli.js",
+  "keywords": [
+    "youtube-dl"
+  ],
+  "author": "synox",
+  "license": "MIT",
+  "dependencies": {
+    "inquirer": "^6.3.1",
+    "lodash": "^4.17.11",
+    "log-symbols": "^2.2.0",
+    "meow": "^5.0.0",
+    "ora": "^3.4.0",
+    "parse-columns": "^2.0.0",
+    "shelljs": "^0.8.3"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/synox/add-quik-video.git"
+  },
+  "devDependencies": {
+    "xo": "^0.24.0"
+  },
+  "xo": {
+    "semicolon": false,
+    "prettier": true,
+    "rules": {
+      "no-unused-vars": [
+        "error",
+        {
+          "argsIgnorePattern": "^_"
+        }
+      ]
+    }
+  },
+  "engines": {
+    "node": ">=8"
+  }
+}
