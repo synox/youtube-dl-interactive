@@ -6,7 +6,7 @@ exports.askResolution = async function(formats) {
 		{
 			type: 'list',
 			name: 'q',
-			message: 'Select resolutio:n',
+			message: 'Select resolution:',
 			choices: _.uniq(formats.map(f => f.resolution))
 		}
 	])
