@@ -2,6 +2,14 @@
 
 A youtube-dl wrapper, which helps you to download a specific format. 
 
+<div align="center">
+	<br>
+	<div>
+		<img src="docs/screenshot.png" width="600"/>
+	</div>
+</div>
+
+
 # Why?
 Because remembering CLI flags is hard.  
 
