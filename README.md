@@ -7,7 +7,7 @@ Because remembering CLI flags is hard.
 
 # Installation
 
-    $ npm install -g https://github.com/synox/youyube-dl-interactive
+    $ npm install -g https://github.com/synox/youtube-dl-interactive
 
 # Usage
 
