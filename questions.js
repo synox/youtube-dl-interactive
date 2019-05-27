@@ -1,5 +1,4 @@
 const inquirer = require('inquirer')
-const _ = require('lodash')
 
 exports.askResolution = async function(formats) {
 	const answers = await inquirer.prompt([
@@ -7,7 +6,7 @@ exports.askResolution = async function(formats) {
 			type: 'list',
 			name: 'q',
 			message: 'Select resolution:',
-			choices: _.uniq(formats.map(f => f.resolution))
+			choices: [...new Set(formats.map(f => f.resolution))]
 		}
 	])
 	return answers.q
