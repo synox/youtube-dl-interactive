@@ -1,5 +1,4 @@
 const inquirer = require('inquirer')
-const _ = require('lodash')
 
 exports.filterByResolution = async function (formats) {
 	const answers = await inquirer.prompt([
