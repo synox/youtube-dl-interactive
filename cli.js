@@ -5,20 +5,25 @@ const logSymbols = require('log-symbols')
 const shell = require('shelljs')
 const parseColumns = require('parse-columns')
 const ora = require('ora')
-const {askExtension, askIncludeSubs, askResolution} = require('./questions')
+const { askExtension, askIncludeSubs, askResolution } = require('./questions')
+const updateNotifier = require('update-notifier');
+const pkg = require('./package.json');
 
-const cli = meow(
-	`Usage: youtube-dl-interactive URL
-	 `
-)
+
+const cli = meow(`Usage: youtube-dl-interactive URL
+	 ` )
+
 
 async function init(args) {
+	
 	if (!shell.which('youtube-dl')) {
 		shell.echo('Sorry, this script requires youtube-dl.')
 		shell.echo('See https://github.com/ytdl-org/youtube-dl.')
 		shell.exit(1)
 	}
 
+	updateNotifier({ pkg }).notify();
+	
 	if (args.length !== 1) {
 		cli.showHelp(1)
 	}
@@ -27,16 +32,19 @@ async function init(args) {
 
 	const formatSelection = await selectFormat(url)
 
-	let options = '-f ' + formatSelection.format
-	if (await askIncludeSubs()) {
-		options += ' --all-subs --embed-subs'
+	if (formatSelection) {
+		let options = '-f ' + formatSelection.format
+		if (await askIncludeSubs()) {
+			options += ' --all-subs --embed-subs'
+		}
+
+		console.log(
+			logSymbols.success,
+			'OK, we will download format with number ' + formatSelection.format
+		)
+		shell.exec(`youtube-dl ${options} "${url}"`)
 	}
 
-	console.log(
-		logSymbols.success,
-		'OK, we will download format with number ' + formatSelection.format
-	)
-	shell.exec(`youtube-dl ${options} "${url}"`)
 }
 
 init(cli.input).catch(error => {
@@ -46,6 +54,9 @@ init(cli.input).catch(error => {
 
 async function selectFormat(url) {
 	const formats = await fetchFormatOptions(url)
+	if (!formats) {
+		return null
+	}
 	let remainingFormats = formats
 
 	// By default, we ignore video only files
@@ -65,14 +76,26 @@ async function selectFormat(url) {
 
 async function fetchFormatOptions(url) {
 	const spinner = ora('Loading formats').start()
-	const qualitiesOutput = shell.exec(`youtube-dl -F "${url}"`, {silent: true})
-		.stdout
-	spinner.stop()
+	const run = shell.exec(`youtube-dl -F "${url}"`, { silent: true })
 
-	const withoutLogs = qualitiesOutput
+	if (run.code !== 0) {
+		spinner.fail('youtube-dl stopped with error:')
+		console.log(run.stdout)
+		console.error(run.stderr)
+		return null
+	} else {
+		const qualitiesOutput = run.stdout
+		console.log(run.code)
+		spinner.stop()
+
+		const withoutLogs = skipLogsInStdout(qualitiesOutput)
+		return parseColumns(withoutLogs, {})
+	}
+}
+function skipLogsInStdout(qualitiesOutput) {
+	return qualitiesOutput
 		.split('\n')
 		.filter(line => line.indexOf('[') !== 0)
-		.join('\n')
-
-	return parseColumns(withoutLogs, {})
+		.join('\n');
 }
+

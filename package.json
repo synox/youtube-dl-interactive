@@ -19,7 +19,8 @@
     "meow": "^5.0.0",
     "ora": "^3.4.0",
     "parse-columns": "^2.0.0",
-    "shelljs": "^0.8.3"
+    "shelljs": "^0.8.3",
+    "update-notifier": "^3.0.0"
   },
   "repository": {
     "type": "git",
