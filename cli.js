@@ -5,7 +5,7 @@ const logSymbols = require('log-symbols')
 const shell = require('shelljs')
 const parseColumns = require('parse-columns')
 const ora = require('ora')
-const { askExtension, askIncludeSubs, askResolution, selectAny } = require('./questions')
+const { filterByExtension, askIncludeSubs, filterByResolution, selectOne } = require('./questions')
 const updateNotifier = require('update-notifier');
 const pkg = require('./package.json');
 
@@ -63,15 +63,13 @@ async function selectFormat(url) {
 	remainingFormats = remainingFormats.filter(
 		f => f.note.indexOf('video only') === -1
 	)
+	
+	remainingFormats = await filterByResolution(remainingFormats)
 
-	const resolution = await askResolution(remainingFormats)
-	remainingFormats = remainingFormats.filter(f => f.resolution === resolution)
-
-	const extension = await askExtension(remainingFormats)
-	remainingFormats = remainingFormats.filter(f => f.extension === extension)
+	remainingFormats = await filterByExtension(remainingFormats)
 
 	if (remainingFormats.length > 1) {
-		return selectAny(remainingFormats)
+		return selectOne(remainingFormats)
 	} else {
 		return remainingFormats[0]
 	}

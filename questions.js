@@ -1,33 +1,32 @@
 const inquirer = require('inquirer')
 const _ = require('lodash')
 
-exports.askResolution = async function (formats) {
+exports.filterByResolution = async function (formats) {
 	const answers = await inquirer.prompt([
 		{
 			type: 'list',
 			name: 'q',
 			message: 'Select resolution:',
-			choices: _.uniq(formats.map(f => f.resolution))
+			choices: [...new Set(formats.map(f => f.resolution))]
 		}
 	])
-	return answers.q
+	return formats.filter(f => f.resolution === answers.q)
 }
 
-exports.askExtension = async function (formats) {
+exports.filterByExtension = async function (formats) {
 	const answers = await inquirer.prompt([
 		{
 			type: 'list',
 			name: 'q',
 			message: 'Select extension:',
-			choices: formats.map(f => {
-				return { name: f.extension + ' | ' + f.note, value: f.extension  }
-			})
+			choices: [...new Set(formats.map(f => f.extension))]
 		}
 	])
-	return answers.q
+	return formats.filter(f => f.extension === answers.q)
+
 }
 
-exports.selectAny = async function (formats) {
+exports.selectOne = async function (formats) {
 	const answers = await inquirer.prompt([
 		{
 			type: 'list',
@@ -39,12 +38,6 @@ exports.selectAny = async function (formats) {
 		}
 	])
 	return answers.q
-}
-
-
-function transformForUi(format) {
-	console.log('transofrm', format)
-	return format.extension + ' | ' + format.note;
 }
 
 exports.askIncludeSubs = async function () {
