@@ -17,7 +17,7 @@ Because remembering CLI flags is hard.
 
 Make sure you have [youtube-dl](https://github.com/ytdl-org/youtube-dl) installed. 
 
-    $ npm install -g https://github.com/synox/youtube-dl-interactive
+    $ npm install -g youtube-dl-interactive
 
 # Usage
 
