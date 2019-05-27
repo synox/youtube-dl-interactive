@@ -5,7 +5,7 @@ const logSymbols = require('log-symbols')
 const shell = require('shelljs')
 const parseColumns = require('parse-columns')
 const ora = require('ora')
-const { askExtension, askIncludeSubs, askResolution } = require('./questions')
+const { askExtension, askIncludeSubs, askResolution, selectAny } = require('./questions')
 const updateNotifier = require('update-notifier');
 const pkg = require('./package.json');
 
@@ -15,7 +15,7 @@ const cli = meow(`Usage: youtube-dl-interactive URL
 
 
 async function init(args) {
-	
+
 	if (!shell.which('youtube-dl')) {
 		shell.echo('Sorry, this script requires youtube-dl.')
 		shell.echo('See https://github.com/ytdl-org/youtube-dl.')
@@ -23,7 +23,7 @@ async function init(args) {
 	}
 
 	updateNotifier({ pkg }).notify();
-	
+
 	if (args.length !== 1) {
 		cli.showHelp(1)
 	}
@@ -59,7 +59,7 @@ async function selectFormat(url) {
 	}
 	let remainingFormats = formats
 
-	// By default, we ignore video only files
+	// By default, we ignore 'video only' files
 	remainingFormats = remainingFormats.filter(
 		f => f.note.indexOf('video only') === -1
 	)
@@ -70,8 +70,11 @@ async function selectFormat(url) {
 	const extension = await askExtension(remainingFormats)
 	remainingFormats = remainingFormats.filter(f => f.extension === extension)
 
-	// Hopefully only one format remains here.
-	return remainingFormats[0]
+	if (remainingFormats.length > 1) {
+		return selectAny(remainingFormats)
+	} else {
+		return remainingFormats[0]
+	}
 }
 
 async function fetchFormatOptions(url) {
@@ -85,7 +88,6 @@ async function fetchFormatOptions(url) {
 		return null
 	} else {
 		const qualitiesOutput = run.stdout
-		console.log(run.code)
 		spinner.stop()
 
 		const withoutLogs = skipLogsInStdout(qualitiesOutput)
