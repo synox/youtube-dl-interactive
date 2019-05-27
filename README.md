@@ -1,6 +1,6 @@
 > Interactively select the quality and format for youtube-dl.
 
-A youtube-dl wrapper, which helps you to download a specific format. 
+A [youtube-dl](https://github.com/ytdl-org/youtube-dl) wrapper, which helps you to download a specific format. 
 
 <div align="center">
 	<br>
