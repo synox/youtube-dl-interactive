@@ -15,7 +15,7 @@ Because remembering CLI flags is hard.
 
 # Installation
 
-Make sure you have [youtube-dl](https://github.com/ytdl-org/youtube-dl) installed. 
+Make sure you have [youtube-dl](https://github.com/ytdl-org/youtube-dl) installed. And [Node](https://nodejs.org) >= 8. 
 
     $ npm install -g youtube-dl-interactive
 
