@@ -36,7 +36,7 @@ async function init(args) {
 
 		console.log(
 			logSymbols.success,
-			'OK, we will download format with number ' + formatSelection.format
+			`OK, downloading format #${formatSelection.format} (${formatSelection.note})` 
 		)
 		shell.exec(`youtube-dl ${options} "${url}"`)
 	}
