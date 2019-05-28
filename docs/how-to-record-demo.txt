@@ -6,5 +6,5 @@ asciinema rec demo
 
 (edit the demo file for start end end)
 
-cat demo | svg-term  --out demo.svg --window --from 4300
+cat demo | svg-term  --out demo.svg --window --from 4300 --width 75 --height 10
 

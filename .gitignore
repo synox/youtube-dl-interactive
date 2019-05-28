@@ -2,3 +2,5 @@
 node_modules
 .vscode
 .DS_Store
+*.mp4
+*.part
