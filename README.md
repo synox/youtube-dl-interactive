@@ -28,4 +28,4 @@ Make sure you have [youtube-dl](https://github.com/ytdl-org/youtube-dl) installe
 > This is alpha version, use it at your own risks! 😱
 > Thanks in advance for reporting bugs. #sharethelove 😊
 
-Only tested on macOS so far. 
+Only tested on macOS so far. It uses the `youtube-dl` in your `PATH`. 
