@@ -4,7 +4,7 @@ https://asciinema.org/docs/installation
 
 asciinema rec demo
 
-(edit the demo file for start end end)
+(edit the demo file for start and end)
 
 cat demo | svg-term  --out demo.svg --window --from 4300 --width 75 --height 10
 
