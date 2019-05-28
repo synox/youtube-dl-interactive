@@ -1,0 +1,10 @@
+
+https://github.com/marionebl/svg-term-cli
+https://asciinema.org/docs/installation
+
+asciinema rec demo
+
+(edit the demo file for start end end)
+
+cat demo | svg-term  --out demo.svg --window --from 4300
+

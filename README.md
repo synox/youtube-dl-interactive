@@ -2,12 +2,12 @@
 
 A [youtube-dl](https://github.com/ytdl-org/youtube-dl) wrapper, which helps you to download a specific format. 
 
-<div align="center">
-	<br>
-	<div>
-		<img src="docs/demo.gif"/>
-	</div>
-</div>
+
+<p align="center">
+  <img width="600" src="docs/demo.svg">
+</p>
+
+
 
 
 # Why?
