@@ -21,10 +21,11 @@ exports.formatMenu = async function (formats) {
     // )
 
     if (remainingFormats.length > 1) {
-        return exports.selectOne(remainingFormats)
+        remainingFormats = [await exports.selectOne(remainingFormats)]
     }
 
-    return remainingFormats[0]
+    const formatString = remainingFormats[0].format_id
+    return {formatString, extension: remainingFormats[0].ext}
 }
 
 

@@ -61,11 +61,11 @@ async function run(url, isDemo) {
 	if (!formats) {
 		return
 	}
-	const formatSelection = await menu.formatMenu(formats);
-	console.log(logSymbols.success, `OK, downloading format #${formatSelection.format_id}: ${menu.createDescription(formatSelection)}`);
-	let options = '-f ' + formatSelection.format_id;
-	if (ytdlApi.supportsSubtitles(formatSelection.ext)) {
-		options += ' --all-subs --embed-subs';
+	const { formatString, extension } = await menu.formatMenu(formats);
+	console.log(logSymbols.success, `OK, downloading format #${formatString}`);
+	let options = ` -f '${formatString}' `;
+	if (ytdlApi.supportsSubtitles(extension)) {
+		options += ' --all-subs --embed-subs ';
 	}
 	if (isDemo) {
 		console.log(logSymbols.warning, `End of demo. would now call: youtube-dl ${options} "${url}"`)
