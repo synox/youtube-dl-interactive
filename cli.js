@@ -3,103 +3,93 @@
 const meow = require('meow')
 const logSymbols = require('log-symbols')
 const shell = require('shelljs')
-const parseColumns = require('parse-columns')
+const ytdlApi = require('./ytdl-api')
 const ora = require('ora')
 const updateNotifier = require('update-notifier')
-const questions = require('./questions')
+const menu = require('./menu')
 const pkg = require('./package.json')
+const chalk = require('chalk')
 
-const cli = meow(`Usage: youtube-dl-interactive URL
-	 `)
+const cli = meow(`
+		Usage: youtube-dl-interactive URL
 
-async function init(args) {
+		Options:
+		  --help, -h  output usage information
+		  --version        output the version number
+		  --demo           use sample data, no remote calls
+
+		`, {
+		flags: {
+			demo: {
+				type: 'boolean',
+			}
+		}
+	}
+)
+
+async function init(args, flags) {
 	if (!shell.which('youtube-dl')) {
 		shell.echo('Sorry, this script requires youtube-dl.')
 		shell.echo('See https://github.com/ytdl-org/youtube-dl.')
 		shell.exit(1)
 	}
 
-	updateNotifier({pkg}).notify()
+	updateNotifier({ pkg }).notify()
 
-	if (args.length !== 1) {
-		cli.showHelp(1)
-	}
-
-	const url = args[0]
-
-	const formatSelection = await selectFormat(url)
-	if (formatSelection) {
-		let options = '-f ' + formatSelection.format
-		if (await questions.askIncludeSubs()) {
-			options += ' --all-subs --embed-subs'
+	if (flags.demo) {
+		console.log(logSymbols.warning, chalk.bgYellowBright('Running demo with local data, not making remote calls'))
+		await run(null, true);
+	} else {
+		if (args.length !== 1) {
+			cli.showHelp(1)
 		}
-
-		console.log(
-			logSymbols.success,
-			`OK, downloading format #${formatSelection.format} (${formatSelection.note})` 
-		)
-		shell.exec(`youtube-dl ${options} "${url}"`)
+		const url = args[0]
+		await run(url, false);
 	}
 }
 
-init(cli.input).catch(error => {
-	console.error(logSymbols.error, error)
+init(cli.input, cli.flags).catch(error => {
+	console.error(error)
 	process.exit(1)
 })
 
-async function selectFormat(url) {
-	const formats = await fetchFormatOptions(url)
-	if (!formats) {
+async function run(url, isDemo) {
+	let info = isDemo
+		? require('./test/samples/thankyousong.json')
+		: await fetchInfo(url)
+
+	if (!info) {
+		return
+	}
+	console.log(chalk.bold('Title:', chalk.blue(info.title)))
+	
+	const formats = info.formats
+	const { formatString, extension } = await menu.formatMenu(formats);
+	console.log(logSymbols.success, `OK, downloading format #${formatString}`);
+	let options = ` -f '${formatString}' `;
+	if (ytdlApi.supportsSubtitles(extension)) {
+		options += ' --all-subs --embed-subs ';
+	}
+	if (isDemo) {
+		console.log(logSymbols.warning, `End of demo. would now call: youtube-dl ${options} "${url}"`)
+	} else {
+		shell.exec(`youtube-dl ${options} "${url}"`);
+	}
+}
+
+async function fetchInfo(url) {
+	const spinner = ora('Loading metadata').start()
+	try {
+		const info = await ytdlApi.getInfo(url)
+		spinner.stop()
+		return info
+	} catch (error) {
+		spinner.fail('can not load formats')
+		console.error(error)
 		return null
 	}
 
-	let remainingFormats = formats
 
-	// By default, we ignore 'video only' files
-	remainingFormats = remainingFormats.filter(
-		f => f.note.indexOf('video only') === -1
-	)
 
-	remainingFormats = await questions.filterByProperty(
-		'Select resolution:',
-		'resolution',
-		remainingFormats
-	)
-
-	remainingFormats = await questions.filterByProperty(
-		'Select extension:',
-		'extension',
-		remainingFormats
-	)
-
-	if (remainingFormats.length > 1) {
-		return questions.selectOne(remainingFormats)
-	}
-
-	return remainingFormats[0]
 }
 
-async function fetchFormatOptions(url) {
-	const spinner = ora('Loading formats').start()
-	const run = shell.exec(`youtube-dl -F "${url}"`, {silent: true})
-
-	if (run.code !== 0) {
-		spinner.fail('youtube-dl stopped with error:')
-		console.log(run.stdout)
-		console.error(run.stderr)
-		return null
-	}
-
-	const qualitiesOutput = run.stdout
-	spinner.stop()
-
-	const withoutLogs = skipLogsInStdout(qualitiesOutput)
-	return parseColumns(withoutLogs, {})
-}
-
-function skipLogsInStdout(qualitiesOutput) {
-	return qualitiesOutput
-		.split('\n')
-		.filter(line => line.indexOf('[') !== 0)
-		.join('\n')
-}
