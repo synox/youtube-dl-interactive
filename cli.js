@@ -54,13 +54,16 @@ init(cli.input, cli.flags).catch(error => {
 })
 
 async function run(url, isDemo) {
-	let formats = isDemo
-		? require('./test/samples/thankyousong.json').formats
-		: await fetchFormatOptions(url)
+	let info = isDemo
+		? require('./test/samples/thankyousong.json')
+		: await fetchInfo(url)
 
-	if (!formats) {
+	if (!info) {
 		return
 	}
+	console.log(chalk.bold('Title:', chalk.blue(info.title)))
+	
+	const formats = info.formats
 	const { formatString, extension } = await menu.formatMenu(formats);
 	console.log(logSymbols.success, `OK, downloading format #${formatString}`);
 	let options = ` -f '${formatString}' `;
@@ -74,12 +77,12 @@ async function run(url, isDemo) {
 	}
 }
 
-async function fetchFormatOptions(url) {
-	const spinner = ora('Loading formats').start()
+async function fetchInfo(url) {
+	const spinner = ora('Loading metadata').start()
 	try {
 		const info = await ytdlApi.getInfo(url)
 		spinner.stop()
-		return info.formats
+		return info
 	} catch (error) {
 		spinner.fail('can not load formats')
 		console.error(error)
