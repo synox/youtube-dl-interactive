@@ -64,15 +64,21 @@ async function run(url, isDemo) {
 	console.log(chalk.bold('Title:', chalk.blue(info.title)))
 	
 	const formats = info.formats
-	const { formatString, extension } = await menu.formatMenu(formats);
-	console.log(logSymbols.success, `OK, downloading format #${formatString}`);
+	const { formatString, isAudioOnly } = await menu.formatMenu(formats);
 	let options = ` -f '${formatString}' `;
-	if (ytdlApi.supportsSubtitles(extension)) {
-		options += ' --all-subs --embed-subs ';
+
+	if(isAudioOnly){
+		options += ' --extract-audio '
 	}
+	
+	// if (ytdlApi.supportsSubtitles(extension)) {
+	// 	options += ' --all-subs --embed-subs ';
+	// }
+
 	if (isDemo) {
-		console.log(logSymbols.warning, `End of demo. would now call: youtube-dl ${options} "${url}"`)
+		console.log(logSymbols.warning, `End of demo. would now call: youtube-dl ${options} <url>"`)
 	} else {
+		console.log(logSymbols.success, `OK, calling youtube-dl with options: ${options}`);
 		shell.exec(`youtube-dl ${options} "${url}"`);
 	}
 }
