@@ -4,50 +4,25 @@ const byteSize = require('byte-size')
 
 exports.formatMenu = async function (formats) {
 
-    // -- VIDEO --
-    let resolutions = formats
-        .filter(f => !!f.height)
-        .map(f => f.height)
+    const answer = await selectVideo(formats);
 
-    resolutions = [...new Set(resolutions)]
-        .sort(f => f.height)
-        .reverse()
-
-    const answers = await inquirer.prompt([{
-        type: 'list',
-        name: 'q',
-        message: 'What do you want?',
-        pageSize: 10,
-        choices: [
-            { name: 'best video + best audio', value: { preset: 'bestvideo+bestaudio/best' } },
-            { name: 'worst video + worst audio', value: { preset: 'worstvideo+worstaudio/worst' } },
-            { name: '<480p mp4', value: { preset: 'bestvideo[height<=480][ext=mp4]+bestaudio[ext=m4a]/best[height<=480][ext=mp4]', extension: 'mp4' } },
-            { name: 'audio only', value: { audioOnly: true } },
-            new inquirer.Separator('--- custom resolution: ---'),
-            ...resolutions.map(f => { return { name: f + 'p', value: { resolution: f } } }),
-        ]
-    }
-    ])
-
-    if ('preset' in answers.q) {
-        // using a preset, return the answer
-        return { formatString: answers.q.preset, extension: answers.q.ext }
+    // the presents need no further selection
+    if (answer.isFinalFormatId) {
+        return { formatString: answer.formatId }
     }
 
-    if ( 'audioOnly' in answers.q) {
+    // the special case 'audio only' has no video data
+    if (answer.audioOnly) {
         const audioFormatId = await selectAudio(formats);
-        const formatString = `${audioFormatId}`
-        return { formatString, isAudioOnly: true }
+        return { formatString: audioFormatId, isAudioOnly: true }
     }
 
-    const height = answers.q.resolution
-    const videoFormat = await exports.selectOne(
+    const height = answer.resolution
+    const videoFormat = await exports.selectOneVideo(
         formats.filter(f => f.height === height)
     )
     const videoFormatId = videoFormat.format_id
-   
 
-    // -- AUDIO --
     const audioFormatId = await selectAudio(formats);
 
     const formatString = `${videoFormatId}+${audioFormatId}`
@@ -67,7 +42,7 @@ exports.filterByProperty = async function (message, displayFun, list) {
     return list.filter(f => displayFun(f) === answers.q)
 }
 
-exports.selectOne = async function (formats) {
+exports.selectOneVideo = async function (formats) {
     const answers = await inquirer.prompt([
         {
             type: 'list',
@@ -82,19 +57,6 @@ exports.selectOne = async function (formats) {
 }
 
 
-exports.selectOneAudio = async function (formats) {
-    const answers = await inquirer.prompt([
-        {
-            type: 'list',
-            name: 'q',
-            message: 'Select a video file:',
-            choices: formats.map(f => {
-                return { name: exports.createAudioDescription(f), value: f }
-            })
-        }
-    ])
-    return answers.q
-}
 
 
 exports.createVideoDescription = function (f) {
@@ -103,8 +65,47 @@ exports.createVideoDescription = function (f) {
 }
 
 exports.createAudioDescription = function (f) {
-    const formatResolution = f.width + 'x' + f.height;
     return `${f.ext.padEnd(4)} ${f.acodec.padEnd(9)} @${String(f.abr).padStart(3)}k ${f.format_note.padEnd(10)} ${byteSize(f.filesize, { units: 'iec' })}`;
+}
+
+async function selectVideo(formats) {
+    const answers = await inquirer.prompt([{
+        type: 'list',
+        name: 'q',
+        message: 'What do you want?',
+        pageSize: 10,
+        choices: [
+            { name: 'best video + best audio', value: { isFinalFormatId: true, formatId: 'bestvideo+bestaudio/best' } },
+            { name: 'worst video + worst audio', value: { isFinalFormatId: true, formatId: 'worstvideo+worstaudio/worst' } },
+            { name: '<480p mp4', value: { isFinalFormatId: true, formatId: 'bestvideo[height<=480][ext=mp4]+bestaudio[ext=m4a]/best[height<=480][ext=mp4]' } },
+            { name: 'audio only', value: { audioOnly: true, resolution: 'none' } },
+            new inquirer.Separator('--- custom resolution: ---'),
+            ...getResolutionChoices(formats),
+        ]
+    }
+    ]);
+    return answers.q;
+}
+
+function getResolutionChoices(formats) {
+    const resolutions = getResolutions(formats)
+    return resolutions.map(f => {
+        return {
+            name: f + 'p',
+            value: { resolution: f }
+        };
+    });
+}
+
+function getResolutions(formats) {
+    let resolutions = formats
+        .filter(f => !!f.height)
+        .map(f => f.height);
+
+    const resolutionsUnique = [...new Set(resolutions)]
+        .sort(f => f.height)
+        .reverse();
+    return resolutionsUnique;
 }
 
 async function selectAudio(formats) {
