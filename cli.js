@@ -6,13 +6,28 @@ const shell = require('shelljs')
 const ytdlApi = require('./ytdl-api')
 const ora = require('ora')
 const updateNotifier = require('update-notifier')
-const questions = require('./questions')
+const menu = require('./menu')
 const pkg = require('./package.json')
+const chalk = require('chalk')
 
-const cli = meow(`Usage: youtube-dl-interactive URL
-	 `)
+const cli = meow(`
+		Usage: youtube-dl-interactive URL
 
-async function init(args) {
+		Options:
+		  --help, -h  output usage information
+		  --version        output the version number
+		  --demo           use sample data, no remote calls
+
+		`, {
+		flags: {
+			demo: {
+				type: 'boolean',
+			}
+		}
+	}
+)
+
+async function init(args, flags) {
 	if (!shell.which('youtube-dl')) {
 		shell.echo('Sorry, this script requires youtube-dl.')
 		shell.echo('See https://github.com/ytdl-org/youtube-dl.')
@@ -21,63 +36,44 @@ async function init(args) {
 
 	updateNotifier({ pkg }).notify()
 
-	if (args.length !== 1) {
-		cli.showHelp(1)
-	}
-
-	const url = args[0]
-
-	const formatSelection = await selectFormat(url)
-	if (formatSelection) {
-		console.log(
-			logSymbols.success,
-			`OK, downloading format #${formatSelection.format_id}: ${questions.createDescription(formatSelection)}`
-		)
-
-		let options = '-f ' + formatSelection.format_id
-
-		if (ytdlApi.supportsSubtitles(formatSelection.ext)) {
-			options += ' --all-subs --embed-subs'
+	if (flags.demo) {
+		console.log(logSymbols.warning, chalk.bgYellowBright('Running demo with local data, not making remote calls'))
+		await run(null, true);
+	} else {
+		if (args.length !== 1) {
+			cli.showHelp(1)
 		}
-		shell.exec(`youtube-dl ${options} "${url}"`)
+		const url = args[0]
+		await run(url, false);
 	}
 }
 
-init(cli.input).catch(error => {
+init(cli.input, cli.flags).catch(error => {
 	console.error(error)
 	process.exit(1)
 })
 
-async function selectFormat(url) {
-	const formats = await fetchFormatOptions(url)
+async function run(url, isDemo) {
+	let formats = isDemo
+		? require('./test/samples/thankyousong.json').formats
+		: await fetchFormatOptions(url)
+
 	if (!formats) {
-		console.error('can not load formats')
-		return null
+		return
 	}
-
-	let remainingFormats = formats
-
-	// By default, we ignore 'video only' files
-	remainingFormats = remainingFormats.filter(f => f.acodec !== 'none')
-
-	remainingFormats = await questions.filterByProperty(
-		'Select resolution:',
-		f => (f.resolution || 'audio only'),
-		remainingFormats
-	)
-
-	// remainingFormats = await questions.filterByProperty(
-	// 	'Select extension:',
-	// 	f => f.extension,
-	// 	remainingFormats
-	// )
-
-	if (remainingFormats.length > 1) {
-		return questions.selectOne(remainingFormats)
+	const formatSelection = await menu.formatMenu(formats);
+	console.log(logSymbols.success, `OK, downloading format #${formatSelection.format_id}: ${menu.createDescription(formatSelection)}`);
+	let options = '-f ' + formatSelection.format_id;
+	if (ytdlApi.supportsSubtitles(formatSelection.ext)) {
+		options += ' --all-subs --embed-subs';
 	}
-
-	return remainingFormats[0]
+	if (isDemo) {
+		console.log(logSymbols.warning, `End of demo. would now call: youtube-dl ${options} "${url}"`)
+	} else {
+		shell.exec(`youtube-dl ${options} "${url}"`);
+	}
 }
+
 async function fetchFormatOptions(url) {
 	const spinner = ora('Loading formats').start()
 	try {
