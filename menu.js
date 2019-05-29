@@ -4,14 +4,14 @@ const byteSize = require('byte-size')
 
 exports.formatMenu = async function (formats) {
 
-    const { videoAndAudioFormatId, videoFormatId } = await selectVideo(formats);
+    const { videoAndAudioFormatId, videoFormatId, videoFormat } = await selectVideo(formats);
 
     // the presents need no further selection
     if (videoAndAudioFormatId) {
         return { formatString: videoAndAudioFormatId }
     }
 
-    const audioFormatId = await selectAudio(formats);
+    const audioFormatId = await selectAudio(formats, videoFormat);
 
     if (!videoFormatId) {
         // the special case 'audio only' has no video data
@@ -21,18 +21,6 @@ exports.formatMenu = async function (formats) {
     }
 }
 
-
-exports.filterByProperty = async function (message, displayFun, list) {
-    const answers = await inquirer.prompt([
-        {
-            type: 'list',
-            name: 'q',
-            message,
-            choices: [...new Set(list.map(displayFun))]
-        }
-    ])
-    return list.filter(f => displayFun(f) === answers.q)
-}
 
 exports.selectOneVideo = async function (formats) {
     const answers = await inquirer.prompt([
@@ -49,15 +37,20 @@ exports.selectOneVideo = async function (formats) {
 }
 
 
-
-
 exports.createVideoDescription = function (f) {
     const formatResolution = f.width + 'x' + f.height;
-    return `${f.ext.padEnd(4)} ${formatResolution.padEnd(9)} ${f.format_note.padEnd(10)} ${byteSize(f.filesize, { units: 'iec' })}`;
+    return `${f.ext.padEnd(4)} ${formatResolution.padEnd(9)} ${f.format_note.padEnd(10)} ${String(byteSize(f.filesize, { units: 'iec' })).padEnd(8)} ${exports.createAudioShortDescription(f, 'audio: ')}`;
 }
 
 exports.createAudioDescription = function (f) {
     return `${f.ext.padEnd(4)} ${f.acodec.padEnd(9)} @${String(f.abr).padStart(3)}k ${f.format_note.padEnd(10)} ${byteSize(f.filesize, { units: 'iec' })}`;
+}
+exports.createAudioShortDescription = function (f, prefix='') {
+    if (f.acodec && f.acodec !== 'none') {
+        return `${prefix}${f.acodec.padEnd(9)} @${String(f.abr).padStart(3)}k`;
+    } else {
+        return ''
+    }
 }
 
 async function selectVideo(formats) {
@@ -88,13 +81,11 @@ async function selectVideo(formats) {
             formats.filter(f => f.height === height)
         )
         const videoFormatId = videoFormat.format_id
-        return { videoFormatId }
+        return { videoFormatId, videoFormat }
     } else {
         // audio only has no video format id
         return { videoFormatId: null }
     }
-
-
 }
 
 function getResolutionChoices(formats) {
@@ -118,28 +109,40 @@ function getResolutions(formats) {
     return resolutionsUnique;
 }
 
-async function selectAudio(formats) {
+async function selectAudio(formats, videoFormat) {
+    const choices = []
+
+
+    if (videoFormat && videoFormat.acodec !== 'none') {
+        choices.push({
+            name: `use audio included in the video: ${exports.createAudioShortDescription(videoFormat)}`,
+            value: { format_id: videoFormat.format_id }
+        })
+    }
+
+    choices.push(...[
+        { name: 'best audio', value: { format_id: 'bestaudio' } },
+        { name: 'worst audio', value: { format_id: 'worstaudio' } },
+        new inquirer.Separator('--- custom: ---'),
+        ...formats
+            .filter(f => !!f.acodec && f.acodec !== 'none')
+            .map(f => {
+                return {
+                    name: exports.createAudioDescription(f),
+                    value: { format: f, format_id: f.format_id }
+                };
+            }),
+    ]);
+
+
     const audioAnswers = await inquirer.prompt([{
         message: 'Select audio:',
         type: 'list',
         name: 'q',
         pageSize: 10,
-        choices: [
-            { name: 'best audio', value: { format_id: 'bestaudio' } },
-            { name: 'worst audio', value: { format_id: 'worstaudio' } },
-            new inquirer.Separator('--- custom: ---'),
-            ...formats
-                .filter(f => !!f.acodec && f.acodec !== 'none')
-                .map(f => {
-                    return {
-                        name: exports.createAudioDescription(f),
-                        value: { format: f, format_id: f.format_id }
-                    };
-                }),
-        ]
+        choices: choices
     }
     ]);
-    const audioFormatId = audioAnswers.q.format_id;
-    return audioFormatId;
+    return audioAnswers.q.format_id;
 }
 
