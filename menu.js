@@ -4,29 +4,21 @@ const byteSize = require('byte-size')
 
 exports.formatMenu = async function (formats) {
 
-    const answer = await selectVideo(formats);
+    const { videoAndAudioFormatId, videoFormatId } = await selectVideo(formats);
 
     // the presents need no further selection
-    if (answer.isFinalFormatId) {
-        return { formatString: answer.formatId }
+    if (videoAndAudioFormatId) {
+        return { formatString: videoAndAudioFormatId }
     }
-
-    // the special case 'audio only' has no video data
-    if (answer.audioOnly) {
-        const audioFormatId = await selectAudio(formats);
-        return { formatString: audioFormatId, isAudioOnly: true }
-    }
-
-    const height = answer.resolution
-    const videoFormat = await exports.selectOneVideo(
-        formats.filter(f => f.height === height)
-    )
-    const videoFormatId = videoFormat.format_id
 
     const audioFormatId = await selectAudio(formats);
 
-    const formatString = `${videoFormatId}+${audioFormatId}`
-    return { formatString, isAudioOnly: false }
+    if (!videoFormatId) {
+        // the special case 'audio only' has no video data
+        return { formatString: audioFormatId, isAudioOnly: true }
+    } else {
+        return { formatString: `${videoFormatId}+${audioFormatId}` }
+    }
 }
 
 
@@ -75,16 +67,34 @@ async function selectVideo(formats) {
         message: 'What do you want?',
         pageSize: 10,
         choices: [
-            { name: 'best video + best audio', value: { isFinalFormatId: true, formatId: 'bestvideo+bestaudio/best' } },
-            { name: 'worst video + worst audio', value: { isFinalFormatId: true, formatId: 'worstvideo+worstaudio/worst' } },
-            { name: '<480p mp4', value: { isFinalFormatId: true, formatId: 'bestvideo[height<=480][ext=mp4]+bestaudio[ext=m4a]/best[height<=480][ext=mp4]' } },
-            { name: 'audio only', value: { audioOnly: true, resolution: 'none' } },
+            { name: 'best video + best audio', value: { formatId: 'bestvideo+bestaudio/best' } },
+            { name: 'worst video + worst audio', value: { formatId: 'worstvideo+worstaudio/worst' } },
+            { name: '<480p mp4', value: { formatId: 'bestvideo[height<=480][ext=mp4]+bestaudio[ext=m4a]/best[height<=480][ext=mp4]' } },
+            { name: 'audio only', value: { audioOnly: true } },
             new inquirer.Separator('--- custom resolution: ---'),
             ...getResolutionChoices(formats),
         ]
     }
     ]);
-    return answers.q;
+
+    const answer = answers.q
+    if (answer.formatId) {
+        return { videoAndAudioFormatId: answer.formatId }
+    }
+
+    if (answer.resolution) {
+        const height = answer.resolution
+        const videoFormat = await exports.selectOneVideo(
+            formats.filter(f => f.height === height)
+        )
+        const videoFormatId = videoFormat.format_id
+        return { videoFormatId }
+    } else {
+        // audio only has no video format id
+        return { videoFormatId: null }
+    }
+
+
 }
 
 function getResolutionChoices(formats) {
