@@ -4,7 +4,7 @@
   "description": "Interactively select the quality and format for youtube-dl",
   "main": "./cli.js",
   "scripts": {
-    "test": ""
+    "test": "ava"
   },
   "bin": "./cli.js",
   "keywords": [
@@ -13,6 +13,7 @@
   "author": "synox",
   "license": "MIT",
   "dependencies": {
+    "byte-size": "^5.0.1",
     "inquirer": "^6.3.1",
     "log-symbols": "^2.2.0",
     "meow": "^5.0.0",
@@ -26,6 +27,7 @@
     "url": "https://github.com/synox/youtube-dl-interactive.git"
   },
   "devDependencies": {
+    "ava": "^1.4.1",
     "xo": "^0.24.0"
   },
   "xo": {
