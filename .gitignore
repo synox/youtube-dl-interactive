@@ -6,3 +6,4 @@ node_modules
 *.part
 *.m4a
 *.mkv
+*.ytdl
