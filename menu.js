@@ -134,7 +134,8 @@ exports.createVideoDescription = function (f) {
         paddingRight(f.width ? f.width + 'x' + f.height : null, 9) +
         paddingRight(f.format_note, 10) +
         paddingRight(byteSize(f.filesize, { units: 'iec' }), 8) +
-        exports.createAudioShortDescription(f, 'audio: ')
+        exports.createAudioShortDescription(f, 'audio: ') +
+        '(' + f.format_id + ')'
 }
 
 const paddingRight = function (value, width) {
@@ -145,7 +146,7 @@ const paddingRight = function (value, width) {
     value = String(value)
     return value.padEnd(width) + ' '
 }
-const paddingLeft = function (value, width, suffix) {
+const paddingLeft = function (value, width, suffix = '') {
     if (!value) {
         value = ''
     } else {
@@ -161,7 +162,8 @@ exports.createAudioDescription = function (f) {
         paddingRight(f.acodec, 9) + '@ ' +
         paddingLeft(f.abr, 3, 'k') +
         paddingRight(f.format_note, 10) +
-        byteSize(f.filesize, { units: 'iec' })
+        paddingLeft(byteSize(f.filesize, { units: 'iec' }), 7) +
+        '(' + f.format_id + ')'
 }
 
 exports.createAudioShortDescription = function (f, prefix = '') {
