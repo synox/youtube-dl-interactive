@@ -129,18 +129,44 @@ function getAudioFormats(formats) {
     return formats.filter(f => f.acodec && f.acodec !== 'none')
 }
 
-
 exports.createVideoDescription = function (f) {
-    const formatResolution = f.width + 'x' + f.height;
-    return `${f.ext.padEnd(4)} ${formatResolution.padEnd(9)} ${f.format_note.padEnd(10)} ${String(byteSize(f.filesize, { units: 'iec' })).padEnd(8)} ${exports.createAudioShortDescription(f, 'audio: ')}`;
+    return paddingRight(f.ext, 4) +
+        paddingRight(f.width ? f.width + 'x' + f.height : null, 9) +
+        paddingRight(f.format_note, 10) +
+        paddingRight(byteSize(f.filesize, { units: 'iec' }), 8) +
+        exports.createAudioShortDescription(f, 'audio: ')
+}
+
+const paddingRight = function (value, width) {
+    if (!value) {
+        value = ''
+    }
+    // value might be an object. Wrap it so we can call padEnd on it. 
+    value = String(value)
+    return value.padEnd(width) + ' '
+}
+const paddingLeft = function (value, width, suffix) {
+    if (!value) {
+        value = ''
+    } else {
+        value += suffix
+    }
+    // value might be an object. Wrap it so we can call padEnd on it. 
+    value = String(value)
+    return value.padStart(width) + ' '
 }
 
 exports.createAudioDescription = function (f) {
-    return `${f.ext.padEnd(4)} ${f.acodec.padEnd(9)} @${String(f.abr).padStart(3)}k ${f.format_note.padEnd(10)} ${byteSize(f.filesize, { units: 'iec' })}`;
+    return paddingRight(f.ext, 4) +
+        paddingRight(f.acodec, 9) + '@ ' +
+        paddingLeft(f.abr, 3, 'k') +
+        paddingRight(f.format_note, 10) +
+        byteSize(f.filesize, { units: 'iec' })
 }
+
 exports.createAudioShortDescription = function (f, prefix = '') {
     if (f.acodec && f.acodec !== 'none') {
-        return `${prefix}${f.acodec.padEnd(9)} @${String(f.abr).padStart(3)}k`;
+        return prefix + paddingRight(f.acodec, 9) + '@ ' + paddingLeft(f.abr, 3, 'k')
     } else {
         return ''
     }

@@ -8,15 +8,28 @@ test('show video description', async t => {
 });
 
 test('show video description with audio', async t => {
-    t.is(await menu.createVideoDescription(formats[17]), 'mp4  640x360   medium     8.5 MiB  audio: mp4a.40.2 @ 96k')
+    t.is(await menu.createVideoDescription(formats[17]), 'mp4  640x360   medium     8.5 MiB  audio: mp4a.40.2 @ 96k ')
+});
+
+test('show video description when some fields are not defined', async t => {
+    t.is(await menu.createVideoDescription({}), '                          NaN      ')
 });
 
 
 test('show audio short description ', async t => {
-    t.is(await menu.createAudioShortDescription(formats[17], 'audio: '), 'audio: mp4a.40.2 @ 96k')
+    t.is(await menu.createAudioShortDescription(formats[17], 'audio: '), 'audio: mp4a.40.2 @ 96k ')
 });
+
+test('show audio short description when some fields are not defined', async t => {
+    t.is(await menu.createAudioShortDescription({acodec: 'mp4a'}), 'mp4a      @     ')
+});
+
 
 test('show audio description ', async t => {
     t.is(await menu.createAudioDescription(formats[17]), 'mp4  mp4a.40.2 @ 96k medium     8.5 MiB')
+});
+
+test('show audio description when some fields are not defined', async t => {
+    t.is(await menu.createAudioDescription({}), '               @                NaN')
 });
 
