@@ -13,5 +13,6 @@ test('supportsSubtitles', async t => {
 	t.truthy(await ytldlApi.supportsSubtitles('webm'))
 	t.truthy(await ytldlApi.supportsSubtitles('mkv'))
 	t.falsy(await ytldlApi.supportsSubtitles('mov'))
+	t.falsy(await ytldlApi.supportsSubtitles(undefined))
 });
 
