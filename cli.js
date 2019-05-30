@@ -87,7 +87,7 @@ async function fetchInfo(url) {
 		spinner.stop()
 		return info
 	} catch (error) {
-		spinner.fail('can not load formats')
+		spinner.fail('Error while loading metadata')
 		console.error(error)
 		return null
 	}
