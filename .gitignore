@@ -4,3 +4,5 @@ node_modules
 .DS_Store
 *.mp4
 *.part
+*.m4a
+*.mkv

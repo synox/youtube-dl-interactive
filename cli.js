@@ -14,7 +14,7 @@ const cli = meow(`
 		Usage: youtube-dl-interactive URL
 
 		Options:
-		  --help, -h  output usage information
+		  --help, -h       output usage information
 		  --version        output the version number
 		  --demo           use sample data, no remote calls
 
@@ -37,7 +37,7 @@ async function init(args, flags) {
 	updateNotifier({ pkg }).notify()
 
 	if (flags.demo) {
-		console.log(logSymbols.warning, chalk.bgYellowBright('Running demo with local data, not making remote calls'))
+		console.log(logSymbols.warning, chalk.bgYellowBright('Running demo with sample data, not actually calling youtube-dl.'))
 		await run(null, true);
 	} else {
 		if (args.length !== 1) {
@@ -62,24 +62,21 @@ async function run(url, isDemo) {
 		return
 	}
 	console.log(chalk.bold('Title:', chalk.blue(info.title)))
-	
+
 	const formats = info.formats
-	const { formatString, isAudioOnly } = await menu.formatMenu(formats);
+	const { formatString, hasVideo, hasAudio } = await menu.formatMenu(formats);
 	let options = ` -f '${formatString}' `;
 
-	if(isAudioOnly){
+	if (!hasVideo && hasAudio) {
 		options += ' --extract-audio '
 	}
-	
-	// if (ytdlApi.supportsSubtitles(extension)) {
-	// 	options += ' --all-subs --embed-subs ';
-	// }
 
 	if (isDemo) {
 		console.log(logSymbols.warning, `End of demo. would now call: youtube-dl ${options} <url>"`)
 	} else {
-		console.log(logSymbols.success, `OK, calling youtube-dl with options: ${options}`);
-		shell.exec(`youtube-dl ${options} "${url}"`);
+		const command = `youtube-dl ${options} "${url}"`
+		console.log(logSymbols.success, `OK. Running: ${command}`);
+		shell.exec(command);
 	}
 }
 
