@@ -4,7 +4,7 @@ A [youtube-dl](https://github.com/ytdl-org/youtube-dl) wrapper, which helps you 
 
 
 <p align="center">
-  <img width="600" src="docs/demo.svg">
+  <img width="600" src="https://raw.githubusercontent.com/synox/youtube-dl-interactive/master/docs/demo.svg?sanitize=true">
 </p>
 
 
