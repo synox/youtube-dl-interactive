@@ -74,7 +74,7 @@ async function run(url, isDemo) {
 
 	const {formats} = info
 	const {formatString, hasVideo, hasAudio} = await menu.formatMenu(formats)
-	let options = ` -f '${formatString}' `
+	let options = ` -f '${formatString}' --restrict-filenames `
 
 	if (!hasVideo && hasAudio) {
 		options += ' --extract-audio '
